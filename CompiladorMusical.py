@@ -1,6 +1,7 @@
 import os
 from mido import MidiFile
 from dataclasses import dataclass
+import json
 
 @dataclass
 class Nota:
@@ -13,25 +14,44 @@ class Evento:
     tecla_pulsada: str
     accion: str
 
-Notas = []
-Eventos = []
-
 
 CarpetaMIDI = 'MIDIs'
 MIDIs = os.listdir(CarpetaMIDI)
-print('\nLa lista de canciones es: ')
-for i, Cancion in enumerate(MIDIs): print(f'{i}.- {Cancion}')
-print('\n')
-Cancion = int(input('Ingrese el número de la canción que va a querer:  '))
-Cancion = MIDIs[Cancion]
-print(f'La canción elegida fue: {Cancion}')
-input()
+CarpetaInstrumentos = "Instrumentos"
+Instrumentos = os.listdir(CarpetaInstrumentos)
+Notas = []
+Eventos = []
 
+def Convertir_NotaEvento(Instrumento, Nota):
+
+    Nota = Convertir_NumeroNota(Nota)
+    with open(f"Instrumentos/{Instrumento}", "r") as Archivo:
+        Instrumento = json.load(Archivo)
+        Nota = Instrumento.get(Nota, "")
+
+    return Nota
 
 def Convertir_NumeroNota(num):
     nombres = ["C", "C#", "D", "D#", "E", "F", "F#", "G", "G#", "A", "A#", "B"]
-    octava = (num // 12) - 1
+    if isinstance(num, str): return num
+    else:octava = (num // 12) - 1
     return f"{nombres[num % 12]}{octava}"
+
+
+
+print('\nLa lista de canciones es: ')
+for i, Cancion in enumerate(MIDIs): print(f'{i}.- {Cancion}\n')
+Cancion = int(input('Ingrese el número de la canción que va a querer:  '))
+Cancion = MIDIs[Cancion]
+
+print('\nLa lista de Instrumentos es: ')
+for i, Instrumento in enumerate(Instrumentos): 
+    print(f'{i}.- {Instrumento}')
+print('\n')
+Instrumento = int(input('Ingrese el número de Instrumento con el que vamos a trabajar:  '))
+Instrumento = Instrumentos[Instrumento]
+
+
 
 mid = MidiFile(f'MIDIs/{Cancion}')
 
@@ -48,7 +68,7 @@ for msg in mid:
     # Note_on con velocity > 0 = inicio de nota
     if msg.type == 'note_on' and msg.velocity > 0:
         notas_activas[msg.note] = tiempo_acumulado
-        Eventos.append(Evento(int(tiempo_acumulado * 1000), Convertir_NumeroNota(msg.note), 'Down'))
+        Eventos.append(Evento(int(tiempo_acumulado * 1000), Convertir_NotaEvento(Instrumento, msg.note), 'Down'))
     
     # Note_off o note_on con velocity 0 = fin de nota
     elif msg.type == 'note_off' or (msg.type == 'note_on' and msg.velocity == 0):
@@ -60,7 +80,7 @@ for msg in mid:
             nota = Convertir_NumeroNota(msg.note)
             print(f"{ms_inicio} ms -> {nota} (dura {ms_duracion} ms)")
             Notas.append(Nota(nota, ms_inicio, ms_duracion))
-            Eventos.append(Evento(ms_inicio, Convertir_NumeroNota(msg.note), 'Up'))
+            Eventos.append(Evento(ms_inicio, Convertir_NotaEvento(Instrumento, nota), 'Up'))
 
 
 # Al final, si quedan notas activas (MIDI mal cerrado)
