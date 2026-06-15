@@ -119,6 +119,7 @@ def Convertir_EventoAutoHotKey(Eventos):
                 # Si el tiempo es exacto al actual, se escribe sin Sleep (simultáneo)
                 Archivo.write(f"Send, {{{tecla} {Evento.accion}}}\n")
 
+# Aquí voy a poner la interfaz de selección inicial ----------------------------------------------------------------
 
 print('\nLa lista de canciones es: ')
 for i, Cancion in enumerate(MIDIs): print(f'{i}.- {Cancion}')
@@ -132,11 +133,16 @@ print('\n')
 Instrumento = int(input('Ingrese el número de Instrumento con el que vamos a trabajar:  '))
 Instrumento = Instrumentos[Instrumento]
 
+print("\nLa lista de velocidades disponibles: ")
+print("1.- Normal")
+print("2.- 1.5")
+print("3.- 2")
+FactorVelocidad = float(input("Respuesta:  "))
+
+# -------------------------------------------------------------------------------------------------------------------
 NotasDisponibles = {}
 with open(f"Instrumentos/{Instrumento}", "r", encoding="utf-8") as Archivo:
     NotasDisponibles = json.load(Archivo);
-
-
 
 mid = MidiFile(f'MIDIs/{Cancion}')
 
@@ -153,7 +159,7 @@ for msg in mid:
     # Note_on con velocity > 0 = inicio de nota
     if msg.type == 'note_on' and msg.velocity > 0:
         # MANDAMOS EL DOWN INMEDIATAMENTE
-        Eventos.append(Evento(int(tiempo_acumulado * 1000), Convertir_NotaEvento(NotasDisponibles, msg.note), 'Down'))
+        Eventos.append(Evento(int(tiempo_acumulado * 1000 * FactorVelocidad), Convertir_NotaEvento(NotasDisponibles, msg.note), 'Down'))
         
         # Usamos listas en el diccionario para guardar superposiciones sin sobrescribir
         if msg.note not in notas_activas:
@@ -163,15 +169,15 @@ for msg in mid:
     # Note_off o note_on con velocity 0 = fin de nota
     elif msg.type == 'note_off' or (msg.type == 'note_on' and msg.velocity == 0):
         # MANDAMOS EL UP SIEMPRE (Esto arregla los Sleeps masivos)
-        tiempo_fin_ms = int(tiempo_acumulado * 1000)
+        tiempo_fin_ms = int(tiempo_acumulado * 1000 * FactorVelocidad)
         Eventos.append(Evento(tiempo_fin_ms, Convertir_NotaEvento(NotasDisponibles, msg.note), 'Up'))
         
         # Calculamos la duración solo para imprimir en consola
         if msg.note in notas_activas and len(notas_activas[msg.note]) > 0:
             inicio = notas_activas[msg.note].pop(0) # Sacamos el tiempo más antiguo
             duracion = tiempo_acumulado - inicio
-            ms_inicio = int(inicio * 1000)
-            ms_duracion = int(duracion * 1000)
+            ms_inicio = int(inicio * 1000 * FactorVelocidad)
+            ms_duracion = int(duracion * 1000 * FactorVelocidad)
             nota = Convertir_NumeroNota(msg.note)
             Notas.append(Nota(nota, ms_inicio, ms_duracion))
             print(f"{ms_inicio} ms -> {nota} (dura {ms_duracion} ms)")
