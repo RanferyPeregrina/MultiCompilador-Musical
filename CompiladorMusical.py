@@ -36,6 +36,7 @@ def Convertir_NotaEvento(NotasDisponibles, Nota):
         return NotaEquivalente
 
 def NotaMasCercana(Nota, NotasDisponibles):
+    print(f'Nota {Nota} no disponible.')
     Nota = Convertir_NotaNumero(Nota)
     mejor_nota = None
     menor_distancia = 999999
@@ -49,6 +50,7 @@ def NotaMasCercana(Nota, NotasDisponibles):
         if distancia < menor_distancia:
             menor_distancia = distancia
             mejor_nota = nota_disponible
+    print(f'Convirtiendo a {mejor_nota}')
     return mejor_nota 
 
 def Convertir_NumeroNota(num):
