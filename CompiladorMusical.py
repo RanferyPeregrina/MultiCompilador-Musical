@@ -14,6 +14,8 @@ class Evento:
     tecla_pulsada: str
     accion: str
 
+#Cambien por amor de dios esta pinche variable si van a depurar.
+ImpresionPermitida = False
 
 CarpetaMIDI = 'MIDIs'
 MIDIs = os.listdir(CarpetaMIDI)
@@ -30,7 +32,9 @@ def Convertir_NotaEvento(NotasDisponibles, Nota):
         # input(f"Nota correcta encontrada, retornando: {NotasDisponibles[Nota]}")
         return NotasDisponibles[Nota]
     else:
+        if ImpresionPermitida: print(f'Nota {Convertir_NumeroNota(Nota)} no disponible.')
         NotaEquivalente = NotaMasCercana(Nota, NotasDisponibles)
+        if ImpresionPermitida: print(f'Convertida a {NotaEquivalente}')
         NotaEquivalente = Convertir_NotaEvento(NotasDisponibles, NotaEquivalente)
         # input(f"Nota incorrecta encontrada, retornando: {NotaEquivalente}")
         return NotaEquivalente
@@ -149,8 +153,8 @@ mid = MidiFile(f'MIDIs/{Cancion}')
 tiempo_acumulado = 0.0
 notas_activas = {}  # diccionario: {note_number: tiempo_inicio}
 
-print(f"Canción: {mid.filename}")
-print("Formato: tiempo_inicio_ms -> nota (duración_ms)")
+if ImpresionPermitida: print(f"Canción: {mid.filename}")
+if ImpresionPermitida: print("Formato: tiempo_inicio_ms -> nota (duración_ms)")
 print()
 
 for msg in mid:
@@ -184,16 +188,18 @@ for msg in mid:
 
 
 
-input('Presiona Enter para imprimir las notas desde dataclases en Notas.')
-for Nota in Notas:
-    print(f'{Nota.nombre}, en {Nota.inicio}, durante {Nota.duracion_ms}')
+if ImpresionPermitida:
+    input('Presiona Enter para imprimir las notas desde dataclases en Notas.')
+    for Nota in Notas:
+        print(f'{Nota.nombre}, en {Nota.inicio}, durante {Nota.duracion_ms}')
 
-input('Presiona Enter para imprimir las notas desde dataclases en eventos.')
-for Evento in Eventos:
-    if Evento.accion == 'Up':
-        print(f'En {Evento.tiempo_ms} se pulsa: {Evento.tecla_pulsada} hacia: Arriba ({Evento.accion})')
-    else:
-        print(f'En {Evento.tiempo_ms} se pulsa: {Evento.tecla_pulsada} hacia: Abajo ({Evento.accion})')
+if ImpresionPermitida:
+    input('Presiona Enter para imprimir las notas desde dataclases en eventos.')
+    for Evento in Eventos:
+        if Evento.accion == 'Up':
+            print(f'En {Evento.tiempo_ms} se pulsa: {Evento.tecla_pulsada} hacia: Arriba ({Evento.accion})')
+        else:
+            print(f'En {Evento.tiempo_ms} se pulsa: {Evento.tecla_pulsada} hacia: Abajo ({Evento.accion})')
 
 input()
 Convertir_EventoAutoHotKey(Eventos) 
